@@ -19,6 +19,7 @@
 
 #include <gtest/gtest.h>
 #include <ixwebsocket/IXWebSocket.h>
+#include <spdlog/spdlog.h>
 
 #include <atomic>
 #include <chrono>
@@ -707,5 +708,10 @@ TEST(WebSocketMiddlewareTlsTest, TlsRoundTrip) {
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+  const int rc = RUN_ALL_TESTS();
+  // Stop spdlog's periodic flush thread while everything it touches is still mapped. Left to
+  // the atexit handlers, the registry joins that thread during static destruction and the
+  // binary segfaults on the way out after every test has passed.
+  spdlog::shutdown();
+  return rc;
 }
